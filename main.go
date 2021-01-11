@@ -26,7 +26,8 @@ func main() {
 		var deposit Deposit
 
 		// Parse the JSON payload into a Deposit
-		json.Unmarshal([]byte(scanner.Text()), &deposit)
+		err = json.Unmarshal([]byte(scanner.Text()), &deposit)
+		checkError(err)
 
 		// Ignore the deposit if it is not unique
 		if deposit.IsUnique() {
