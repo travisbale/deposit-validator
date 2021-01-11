@@ -29,8 +29,8 @@ func main() {
 		err = json.Unmarshal([]byte(scanner.Text()), &deposit)
 		checkError(err)
 
-		// Ignore the deposit if it is not unique
-		if deposit.IsUnique() {
+		// Ignore the deposit if it has already been validated
+		if !deposit.HasBeenValidated() {
 			// Create the response JSON and write it to the output file
 			response := fmt.Sprintf(`{"id":"%s","customer_id":"%s","accepted":%t}`, deposit.ID, deposit.CustomerID, deposit.Validate())
 			_, err := outFile.WriteString(response + "\n")

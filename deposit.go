@@ -43,9 +43,9 @@ var validatedDeposits = make(map[string]bool)
 var dailyLedgers = make(map[string]dailyLedger)
 var weeklyLedgers = make(map[string]weeklyLedger)
 
-// IsUnique returns whether or not the deposit has already been processed
-func (deposit *Deposit) IsUnique() bool {
-	return !validatedDeposits[deposit.getUniqueIdentifier()]
+// HasBeenValidated returns whether or not the deposit has already been processed
+func (deposit *Deposit) HasBeenValidated() bool {
+	return validatedDeposits[deposit.getUniqueIdentifier()]
 }
 
 // Validate returns whether or not the deposit is valid

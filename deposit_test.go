@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIsUnique_ShouldReturnTrueIfTheDepositHasNotBeenValidated(t *testing.T) {
+func TestHasBeenValidated_ShouldReturnFalseIfTheDepositHasNotBeenValidated(t *testing.T) {
 	deposit := Deposit{"1", "1", "$1.00", time.Date(2021, 1, 9, 10, 0, 0, 0, time.UTC), 0}
 
-	assert.True(t, deposit.IsUnique())
+	assert.False(t, deposit.HasBeenValidated())
 }
 
 func TestValidate_ShouldReturnTrueIfDepositIsValid(t *testing.T) {
@@ -19,10 +19,10 @@ func TestValidate_ShouldReturnTrueIfDepositIsValid(t *testing.T) {
 	assert.True(t, first.Validate())
 }
 
-func TestIsUnique_ShouldReturnFalseAfterTheDepositHasBeenValidated(t *testing.T) {
+func TestHasBeenValidated_ShouldReturnTrueAfterTheDepositHasBeenValidated(t *testing.T) {
 	deposit := Deposit{"1", "1", "$1.00", time.Date(2021, 1, 9, 10, 0, 0, 0, time.UTC), 0}
 
-	assert.False(t, deposit.IsUnique())
+	assert.True(t, deposit.HasBeenValidated())
 }
 
 func TestValidate_ShouldReturnTrueIfCustomerDepositsLessThanFourTimesADay(t *testing.T) {
