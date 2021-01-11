@@ -11,7 +11,7 @@ const dailyLimit = 5000
 const weeklyLimit = 20000
 const maxDailyDeposits = 3
 
-// A Deposit represents an attempt to load funds into a customer account
+// A Deposit request is used to attempt to load funds into a customer account
 type Deposit struct {
 	ID           string    `json:"id"`
 	CustomerID   string    `json:"customer_id"`
@@ -20,7 +20,7 @@ type Deposit struct {
 	ParsedAmount float64
 }
 
-// The dailyLedger is used to record and validate deposits on a given day
+// The dailyLedger is used to record and validate deposits on the current day
 type dailyLedger struct {
 	year     int
 	month    time.Month
@@ -29,14 +29,14 @@ type dailyLedger struct {
 	total    float64
 }
 
-// The weeklyLedger is used to record and validate deposits over a given week
+// The weeklyLedger is used to record and validate deposits over the current week
 type weeklyLedger struct {
 	year  int
 	week  int
 	total float64
 }
 
-// Keep a record of all processed load IDs and customer IDs
+// Record of all processed load IDs and customer IDs to prevent duplicates
 var uniqueDeposits = make(map[string]bool)
 
 // Keep daily and weekly ledgers for each customer
@@ -119,6 +119,7 @@ func (deposit *Deposit) parseAmount() error {
 		return err
 	}
 
+	// Save the amount to the struct so it only has to be calculated once
 	deposit.ParsedAmount = amount
 
 	return nil
