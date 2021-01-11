@@ -36,8 +36,8 @@ type weeklyLedger struct {
 	total float64
 }
 
-// Record of all processed load IDs and customer IDs to prevent duplicates
-var uniqueDeposits = make(map[string]bool)
+// Record all processed deposits to prevent duplicates
+var validatedDeposits = make(map[string]bool)
 
 // Keep daily and weekly ledgers for each customer
 var dailyLedgers = make(map[string]dailyLedger)
@@ -45,18 +45,15 @@ var weeklyLedgers = make(map[string]weeklyLedger)
 
 // IsUnique returns whether or not the deposit has already been processed
 func (deposit *Deposit) IsUnique() bool {
-	exists := uniqueDeposits[deposit.ID+"-"+deposit.CustomerID]
-
-	if !exists {
-		uniqueDeposits[deposit.ID+"-"+deposit.CustomerID] = true
-	}
-
-	return !exists
+	return !validatedDeposits[deposit.getUniqueIdentifier()]
 }
 
 // Validate returns whether or not the deposit is valid
 func (deposit *Deposit) Validate() bool {
 	err := deposit.parseAmount()
+
+	// Record the deposit so it does not get processed twice
+	validatedDeposits[deposit.getUniqueIdentifier()] = true
 
 	if err == nil && deposit.validateDailyLimits() && deposit.validateWeeklyLimit() {
 		// Record the deposit in the daily ledger
@@ -74,6 +71,10 @@ func (deposit *Deposit) Validate() bool {
 	}
 
 	return false
+}
+
+func (deposit *Deposit) getUniqueIdentifier() string {
+	return deposit.ID + "-" + deposit.CustomerID
 }
 
 func (deposit *Deposit) validateDailyLimits() bool {

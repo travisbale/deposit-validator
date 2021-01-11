@@ -7,32 +7,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type uniqueTest struct {
-	deposit  Deposit
-	expected bool
-}
+func TestIsUnique_ShouldReturnTrueIfTheDepositHasNotBeenValidated(t *testing.T) {
+	deposit := Deposit{"1", "1", "$1.00", time.Date(2021, 1, 9, 10, 0, 0, 0, time.UTC), 0}
 
-var uniqueTests = []uniqueTest{
-	{Deposit{"1", "1", "$1.00", time.Date(2021, 1, 9, 10, 0, 0, 0, time.UTC), 0}, true},
-	{Deposit{"1", "1", "$1.00", time.Date(2021, 1, 9, 10, 1, 0, 0, time.UTC), 0}, false},
-	{Deposit{"1", "2", "$1.00", time.Date(2021, 1, 9, 10, 2, 0, 0, time.UTC), 0}, true},
-	{Deposit{"2", "2", "$1.00", time.Date(2021, 1, 9, 10, 3, 0, 0, time.UTC), 0}, true},
-	{Deposit{"3", "3", "$1.00", time.Date(2021, 1, 9, 10, 4, 0, 0, time.UTC), 0}, true},
-	{Deposit{"1", "2", "$1.00", time.Date(2021, 1, 9, 10, 5, 0, 0, time.UTC), 0}, false},
-}
-
-func TestIsUnique(t *testing.T) {
-	for _, test := range uniqueTests {
-		if result := test.deposit.IsUnique(); result != test.expected {
-			t.Errorf("Result '%t' does not match expected value '%t'", result, test.expected)
-		}
-	}
+	assert.True(t, deposit.IsUnique())
 }
 
 func TestValidate_ShouldReturnTrueIfDepositIsValid(t *testing.T) {
 	first := Deposit{"1", "1", "$1.00", time.Date(2021, 1, 9, 10, 0, 0, 0, time.UTC), 0}
 
 	assert.True(t, first.Validate())
+}
+
+func TestIsUnique_ShouldReturnFalseAfterTheDepositHasBeenValidated(t *testing.T) {
+	deposit := Deposit{"1", "1", "$1.00", time.Date(2021, 1, 9, 10, 0, 0, 0, time.UTC), 0}
+
+	assert.False(t, deposit.IsUnique())
 }
 
 func TestValidate_ShouldReturnTrueIfCustomerDepositsLessThanFourTimesADay(t *testing.T) {

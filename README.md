@@ -41,7 +41,7 @@ We value well-structured, self-documenting code with sensible test coverage. Des
 
 I wasn't sure what the larger context of this problem was so I decided to go with a relatively straightforward implementation. The program just validates the deposit attempt, it does not keep track of the customer account balances.
 
-*Disclaimer:* This is my first time developing anything using Golang
+*Disclaimer:* This is the first time I have developed anything using Golang but I can see why it's gaining popularity.
 
 ### Implementation
 
