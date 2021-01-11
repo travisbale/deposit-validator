@@ -36,7 +36,7 @@ type weeklyLedger struct {
 	total float64
 }
 
-// Record all processed deposits to prevent duplicates
+// Record all validated deposits to prevent duplicates
 var validatedDeposits = make(map[string]bool)
 
 // Keep daily and weekly ledgers for each customer
