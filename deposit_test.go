@@ -84,3 +84,9 @@ func TestValidate_ShouldReturnTrueIfCustomerDepositsLessThanTheWeeklyLimitInAWee
 	assert.True(t, fourth.Validate())
 	assert.False(t, fifth.Validate())
 }
+
+func TestValidate_ShouldReturnFalseIfAmountCannotBeParsed(t *testing.T) {
+	deposit := Deposit{"1", "4", "%5000.00", time.Date(2021, 9, 0, 0, 0, 0, 0, time.UTC), 0}
+
+	assert.False(t, deposit.Validate())
+}

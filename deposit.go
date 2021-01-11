@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -21,7 +20,7 @@ type Deposit struct {
 	ParsedAmount float64
 }
 
-// The dailyLedger is used to record deposits on a given day
+// The dailyLedger is used to record and validate deposits on a given day
 type dailyLedger struct {
 	year     int
 	month    time.Month
@@ -30,7 +29,7 @@ type dailyLedger struct {
 	total    float64
 }
 
-// The weeklyLedger is used to record deposits over a given week
+// The weeklyLedger is used to record and validate deposits over a given week
 type weeklyLedger struct {
 	year  int
 	week  int
@@ -57,9 +56,9 @@ func (deposit *Deposit) IsUnique() bool {
 
 // Validate returns whether or not the deposit is valid
 func (deposit *Deposit) Validate() bool {
-	deposit.parseAmount()
+	err := deposit.parseAmount()
 
-	if deposit.validateDailyLimits() && deposit.validateWeeklyLimit() {
+	if err == nil && deposit.validateDailyLimits() && deposit.validateWeeklyLimit() {
 		// Record the deposit in the daily ledger
 		dailyLedger := dailyLedgers[deposit.CustomerID]
 		dailyLedger.deposits++
@@ -113,13 +112,14 @@ func (deposit *Deposit) validateWeeklyLimit() bool {
 	return (ledger.total + deposit.ParsedAmount) <= weeklyLimit
 }
 
-func (deposit *Deposit) parseAmount() {
+func (deposit *Deposit) parseAmount() error {
 	amount, err := strconv.ParseFloat(strings.TrimPrefix(deposit.Amount, "$"), 64)
-
 	if err != nil {
 		// Input wasn't properly formatted
-		log.Fatal(err)
+		return err
 	}
 
 	deposit.ParsedAmount = amount
+
+	return nil
 }
