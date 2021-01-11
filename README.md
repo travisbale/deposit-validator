@@ -1,3 +1,7 @@
+# KOHO Take Home Assignment
+
+## Instructions
+
 In finance, it's common for accounts to have so-called "velocity limits". In this task, you'll write a program that accepts or declines attempts to load funds into customers' accounts in real-time.
 
 Each attempt to load funds will come as a single-line JSON payload, structured as follows:
@@ -32,3 +36,16 @@ Your program should process lines from `input.txt` and return output in the form
 You're welcome to write your program in a general-purpose language of your choosing, but as we use Go on the back-end and TypeScript on the front-end, we do have a preference towards solutions written in Go (back-end) and TypeScript (front-end).
 
 We value well-structured, self-documenting code with sensible test coverage. Descriptive function and variable names are appreciated, as is isolating your business logic from the rest of your code.
+
+## Solution
+
+I wasn't sure what the larger context of this problem was so I decided to go with a relatively straightforward implementation.
+
+*Disclaimer:* This is my first foray into the world of Golang
+
+### Implementation
+
+The program reads `input.txt`, creating a Deposit structure from each line of JSON input. If the JSON is improperly formatted, or cannot be unmarshalled to a Deposit, then the program exits due to a fatal error. If the input is properly formatted, then the deposit is checked for uniqueness. If the load ID and customer ID have been processed previously, the input is skipped. If the deposit is unique, the deposit is validated and the response JSON is written to `output.txt`.
+
+Deposits are validated with the help of daily and weekly "ledgers". There is a ledger for each individual customer, and each ledger records the amount of money deposited into the customer's account during the time period. The daily ledger also records the total number of deposits. Since the deposits are all received in chronological order they are reset whenever a deposit occurs during a new time period. If the deposit is valid, then the ledgers are updated to reflect the new deposit.
+
