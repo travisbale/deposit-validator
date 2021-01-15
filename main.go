@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -23,20 +24,29 @@ func main() {
 
 	// Scan the input file line by line
 	for scanner.Scan() {
-		var deposit Deposit
+		response, err := processInput(scanner.Text())
 
-		// Parse the JSON payload into a Deposit
-		err = json.Unmarshal([]byte(scanner.Text()), &deposit)
-		checkError(err)
-
-		// Ignore the deposit if it has already been validated
-		if !deposit.HasBeenValidated() {
-			// Create the response JSON and write it to the output file
-			response := fmt.Sprintf(`{"id":"%s","customer_id":"%s","accepted":%t}`, deposit.ID, deposit.CustomerID, deposit.Validate())
+		if err == nil {
 			_, err := outFile.WriteString(response + "\n")
 			checkError(err)
 		}
 	}
+}
+
+func processInput(input string) (string, error) {
+	var deposit Deposit
+
+	// Parse the JSON input into a deposit
+	err := json.Unmarshal([]byte(input), &deposit)
+	checkError(err)
+
+	// Ignore the deposit if it has already been validated
+	if !deposit.HasBeenValidated() {
+		result := fmt.Sprintf(`{"id":"%s","customer_id":"%s","accepted":%t}`, deposit.ID, deposit.CustomerID, deposit.Validate())
+		return result, nil
+	}
+
+	return "", errors.New("Deposit has already been processed")
 }
 
 func checkError(err error) {
