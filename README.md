@@ -1,6 +1,4 @@
-# KOHO Take Home Assignment
-
-## Instructions
+# Acount Deposit Validator
 
 In finance, it's common for accounts to have so-called "velocity limits". In this task, you'll write a program that accepts or declines attempts to load funds into customers' accounts in real-time.
 
@@ -37,22 +35,16 @@ You're welcome to write your program in a general-purpose language of your choos
 
 We value well-structured, self-documenting code with sensible test coverage. Descriptive function and variable names are appreciated, as is isolating your business logic from the rest of your code.
 
-## Solution
-
-I wasn't sure what the larger context of this problem was so I decided to go with a relatively straightforward implementation. The program just validates the deposit attempt, it does not keep track of the customer account balances.
-
-*Disclaimer:* This is the first time I have developed anything using Golang but I can see why it's gaining popularity.
-
-### Implementation
+## Implementation
 
 The program reads `input.txt` and creates a Deposit struct from each line of JSON input. If the JSON is improperly formatted, or cannot be unmarshalled to a Deposit, then the program exits due to a fatal error. If the input is properly formatted then the program checks to see if the deposit has already been validated. If the load ID and customer ID have been validated previously, the input is skipped. Otherwise the deposit is validated and the response JSON is written to `output.txt`.
 
 Deposits are validated with the help of daily and weekly ledgers. There is a daily and weekly ledger for each individual customer, and each ledger records the amount of money deposited into the customer's account during the time period. The daily ledger also records the total number of deposits for the day. Since the deposits are all received in chronological order the ledgers are reset whenever a customer makes a deposit during a new time period. If the deposit is valid the ledgers are updated to include the new deposit.
 
-### Testing
+## Testing
 
 Tests can be run along with a test coverage report by running `go test -v -cover`
 
-### Execution
+## Execution
 
 To run the program, clone the repository, compile the program using `go build` and run the executable.
