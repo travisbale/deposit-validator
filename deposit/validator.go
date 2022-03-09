@@ -1,23 +1,15 @@
-package main
+package deposit
 
-import (
-	"strconv"
-	"strings"
-	"time"
-)
+import "time"
 
 // Declare the velocity limits
 const dailyLimit = 5000
 const weeklyLimit = 20000
 const maxDailyDeposits = 3
 
-// A Deposit request is used to attempt to load funds into a customer account
-type Deposit struct {
-	ID           string    `json:"id"`
-	CustomerID   string    `json:"customer_id"`
-	Amount       string    `json:"load_amount"`
-	Time         time.Time `json:"time"`
-	ParsedAmount float64
+type Validator interface {
+	HasBeenValidated(deposit *Deposit) bool
+	Validate(deposit *Deposit) bool
 }
 
 // The dailyLedger is used to record and validate deposits on the current day
@@ -36,36 +28,46 @@ type weeklyLedger struct {
 	total float64
 }
 
-// Record all validated deposits to prevent duplicates
-var validatedDeposits = make(map[string]bool)
+type validator struct {
+	// Record all validated deposits to prevent duplicates
+	validatedDeposits map[string]bool
 
-// Keep daily and weekly ledgers for each customer
-var dailyLedgers = make(map[string]dailyLedger)
-var weeklyLedgers = make(map[string]weeklyLedger)
+	// Keep daily and weekly ledgers for each customer
+	dailyLedgers  map[string]dailyLedger
+	weeklyLedgers map[string]weeklyLedger
+}
+
+func NewValidator() Validator {
+	return &validator{
+		validatedDeposits: make(map[string]bool),
+		dailyLedgers:      make(map[string]dailyLedger),
+		weeklyLedgers:     make(map[string]weeklyLedger),
+	}
+}
 
 // HasBeenValidated returns whether or not the deposit has already been processed
-func (deposit *Deposit) HasBeenValidated() bool {
-	return validatedDeposits[deposit.getUniqueIdentifier()]
+func (v *validator) HasBeenValidated(deposit *Deposit) bool {
+	return v.validatedDeposits[getUniqueIdentifier(deposit)]
 }
 
 // Validate returns whether or not the deposit is valid
-func (deposit *Deposit) Validate() bool {
+func (v *validator) Validate(deposit *Deposit) bool {
 	err := deposit.parseAmount()
 
 	// Record the deposit so it does not get processed twice
-	validatedDeposits[deposit.getUniqueIdentifier()] = true
+	v.validatedDeposits[getUniqueIdentifier(deposit)] = true
 
-	if err == nil && deposit.validateDailyLimits() && deposit.validateWeeklyLimit() {
+	if err == nil && v.validateDailyLimits(deposit) && v.validateWeeklyLimit(deposit) {
 		// Record the deposit in the daily ledger
-		dailyLedger := dailyLedgers[deposit.CustomerID]
+		dailyLedger := v.dailyLedgers[deposit.CustomerID]
 		dailyLedger.deposits++
 		dailyLedger.total += deposit.ParsedAmount
-		dailyLedgers[deposit.CustomerID] = dailyLedger
+		v.dailyLedgers[deposit.CustomerID] = dailyLedger
 
 		// Record the deposit in the weekly ledger
-		weeklyLedger := weeklyLedgers[deposit.CustomerID]
+		weeklyLedger := v.weeklyLedgers[deposit.CustomerID]
 		weeklyLedger.total += deposit.ParsedAmount
-		weeklyLedgers[deposit.CustomerID] = weeklyLedger
+		v.weeklyLedgers[deposit.CustomerID] = weeklyLedger
 
 		return true
 	}
@@ -73,13 +75,13 @@ func (deposit *Deposit) Validate() bool {
 	return false
 }
 
-func (deposit *Deposit) getUniqueIdentifier() string {
+func getUniqueIdentifier(deposit *Deposit) string {
 	return deposit.ID + "-" + deposit.CustomerID
 }
 
-func (deposit *Deposit) validateDailyLimits() bool {
+func (v *validator) validateDailyLimits(deposit *Deposit) bool {
 	// Get the customer's ledger, or an empty ledger if their ledger didn't exist
-	ledger := dailyLedgers[deposit.CustomerID]
+	ledger := v.dailyLedgers[deposit.CustomerID]
 
 	year, month, day := deposit.Time.Date()
 
@@ -90,15 +92,15 @@ func (deposit *Deposit) validateDailyLimits() bool {
 		ledger.day = day
 		ledger.deposits = 0
 		ledger.total = 0
-		dailyLedgers[deposit.CustomerID] = ledger
+		v.dailyLedgers[deposit.CustomerID] = ledger
 	}
 
 	return ledger.deposits < maxDailyDeposits && (ledger.total+deposit.ParsedAmount) <= dailyLimit
 }
 
-func (deposit *Deposit) validateWeeklyLimit() bool {
+func (v *validator) validateWeeklyLimit(deposit *Deposit) bool {
 	// Get the customer's ledger, or an empty ledger if their ledger didn't exist
-	ledger := weeklyLedgers[deposit.CustomerID]
+	ledger := v.weeklyLedgers[deposit.CustomerID]
 
 	year, week := deposit.Time.ISOWeek()
 
@@ -107,21 +109,8 @@ func (deposit *Deposit) validateWeeklyLimit() bool {
 		ledger.year = year
 		ledger.week = week
 		ledger.total = 0
-		weeklyLedgers[deposit.CustomerID] = ledger
+		v.weeklyLedgers[deposit.CustomerID] = ledger
 	}
 
 	return (ledger.total + deposit.ParsedAmount) <= weeklyLimit
-}
-
-func (deposit *Deposit) parseAmount() error {
-	amount, err := strconv.ParseFloat(strings.TrimPrefix(deposit.Amount, "$"), 64)
-	if err != nil {
-		// Input wasn't properly formatted
-		return err
-	}
-
-	// Save the amount to the struct so it only has to be calculated once
-	deposit.ParsedAmount = amount
-
-	return nil
 }

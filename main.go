@@ -2,11 +2,12 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/travisbale/deposit-validator/deposit"
 )
 
 func main() {
@@ -21,10 +22,11 @@ func main() {
 	defer outFile.Close()
 
 	scanner := bufio.NewScanner(inFile)
+	depositValidator := deposit.NewValidator()
 
 	// Scan the input file line by line
 	for scanner.Scan() {
-		response, err := processInput(scanner.Text())
+		response, err := processInput(depositValidator, scanner.Text())
 
 		if err == nil {
 			_, err := outFile.WriteString(response + "\n")
@@ -33,20 +35,18 @@ func main() {
 	}
 }
 
-func processInput(input string) (string, error) {
-	var deposit Deposit
-
-	// Parse the JSON input into a deposit
-	err := json.Unmarshal([]byte(input), &deposit)
+func processInput(depositValidator deposit.Validator, input string) (string, error) {
+	deposit, err := deposit.ParseJson(input)
 	checkError(err)
 
 	// Ignore the deposit if it has already been validated
-	if !deposit.HasBeenValidated() {
-		result := fmt.Sprintf(`{"id":"%s","customer_id":"%s","accepted":%t}`, deposit.ID, deposit.CustomerID, deposit.Validate())
+	if !depositValidator.HasBeenValidated(deposit) {
+		isValid := depositValidator.Validate(deposit)
+		result := fmt.Sprintf(`{"id":"%s","customer_id":"%s","accepted":%t}`, deposit.ID, deposit.CustomerID, isValid)
 		return result, nil
 	}
 
-	return "", errors.New("Deposit has already been processed")
+	return "", errors.New("deposit has already been processed")
 }
 
 func checkError(err error) {

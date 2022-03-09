@@ -1,4 +1,4 @@
-module github.com/travisbale/koho-takehome
+module github.com/travisbale/deposit-validator
 
 go 1.15
 
